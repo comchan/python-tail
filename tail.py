@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-from optparse import OptionParser
 
 
 class Tail:
