@@ -1,8 +1,6 @@
 # python-tail
 Implementaion of tail in Python
 
-**Warning** Still very buggy, especially on the truncation detection. Debugging in progress.
-
 Add file truncation detection. If the file is truncated (file size become less than last snapshot), it reopens the file and continue tracking.
 Currently, python will lock the tail'ed file. It will need further improvment for the behavior of `tail --follow=name` .
 
