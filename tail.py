@@ -42,7 +42,7 @@ class Tail:
                 if not line:
                     time.sleep(interval)
                 elif self._line_handler:
-                    self._line_handler(line.rstrip())
+                    self._line_handler(line.rstrip('\r\n'))
 
         except FileNotFoundError:
             print("File not found: "+self._file_name)
