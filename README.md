@@ -1,20 +1,24 @@
 # python-tail
-Implementaion of tail in Python
+Implementaion of UNIX tail in Python
 
-Add file truncation detection. If the file is truncated (file size become less than last snapshot), it reopens the file and continue tracking.
-Currently, python will lock the tail'ed file. It will need further improvment for the behavior of `tail --follow=name` .
+This implementation detect file changes by getting the file size from the file system. If the detected file size increases, it outputs the new lines.
+If the detected file size reduces, it is determined as a truncation and output all the lines in the tail'ed file. 
+
+Recent update tries to reduce the duration of tail'ed file being locked.
+
 
 ## Usage
     from tail import Tail
 
-    def tail_line_handler(line):
-        print('>> ' + line)
+    def tail_lines_handler(lines):
+        for line in lines:
+            print('>> ' + line)
     
     def tail_truncate_handler():
         print('File truncated')
     
     # Create tail object
-    tail = Tail('/path/to/logfile.txt', tail_line_handler, tail_truncate_handler)
+    tail = Tail('/path/to/logfile.txt', tail_lines_handler, tail_truncate_handler)
 
     # Start watching file with 0.01 sec interval
     # WARNING: anything faster than 0.01 secs, depends on the speed of your filesystem,
