@@ -5,10 +5,13 @@ import time
 
 class Tail:
 
-    def __init__(self, file_name, line_handler, truncate_handler):
+    def __init__(self, file_name, line_handler, truncate_handler, **kwargs):
         self._file_name = file_name
         self._line_handler = line_handler
         self._truncate_handler = truncate_handler
+        for kw in kwargs:
+            if kw == 'retry':
+                self._retry = bool(kwargs[kw])
 
     def check_access(self):
         if not os.path.exists(self._file_name):
@@ -23,26 +26,41 @@ class Tail:
     def watch(self, interval):
         try:
             self.check_access()
-            fp = open(self._file_name, 'r')
 
             prev_size = os.path.getsize(self._file_name)
+
             while True:
-                file_size = os.path.getsize(self._file_name)
-                if prev_size > file_size:
-                    if self._truncate_handler:
-                        self._truncate_handler()
-                    fp.close()
+                try:
                     self.check_access()
-                    fp = open(self._file_name, 'r')
-                    prev_size = 0
-                    continue
-                fp.seek(prev_size, 0)
-                line = fp.readline()
-                prev_size = fp.tell()
-                if not line:
+                    file_size = os.path.getsize(self._file_name)
+                    lines = list()
+                    if prev_size != file_size:
+                        fp = open(self._file_name, 'r')
+                        if prev_size > file_size:
+                            if self._truncate_handler:
+                                self._truncate_handler()
+                            prev_size = 0
+                        do_read_lines = True
+                        while do_read_lines:
+                            fp.seek(prev_size, 0)
+                            line = fp.readline()
+                            prev_size = fp.tell()
+                            if line:
+                                lines.append(line.rstrip('\r\n'))
+                            else:
+                                do_read_lines = False
+                        fp.close()
+                    if len(lines) > 0 and self._line_handler:
+                        self._line_handler(lines)
                     time.sleep(interval)
-                elif self._line_handler:
-                    self._line_handler(line.rstrip('\r\n'))
+                except FileNotFoundError:
+                    print("File not found: " + self._file_name)
+                    if not self._retry:
+                        raise
+                except PermissionError:
+                    print("Access denied: " + self._file_name)
+                    if not self._retry:
+                        raise
 
         except FileNotFoundError:
             print("File not found: "+self._file_name)
@@ -59,8 +77,9 @@ class Tail:
 
 
 def main():
-    def line_handler(line):
-        print(">> "+line)
+    def line_handler(lines):
+        for line in lines:
+            print(">> "+line)
 
     def truncate_handler():
         print("File truncated")
@@ -72,7 +91,7 @@ def main():
     filename = sys.argv[1]
 
     tail = Tail(filename, line_handler, truncate_handler)
-    tail.watch(0.001)
+    tail.watch(0.01)
 
 
 if __name__ == "__main__":
