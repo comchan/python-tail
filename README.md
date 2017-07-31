@@ -1,11 +1,17 @@
 # python-tail
 Implementaion of UNIX tail in Python
 
+Tested with Python 3.6. 
+
 This implementation detect file changes by getting the file size from the file system. If the detected file size increases, it outputs the new lines.
+
 If the detected file size reduces, it is determined as a truncation and output all the lines in the tail'ed file. 
 
 Recent update tries to reduce the duration of tail'ed file being locked.
 
+## Note to those who tries to use file timestamp for change detection
+**Windows > 7** now will not update accessed and modified timestamp of a file until the file is closed. This is a new feature that reduces disk IO. Therefore, `os.path.getatime()` and `os.path.getmtime()` will not work.
+I have not tested this script on UNIX system yet. 
 
 ## Usage
     from tail import Tail
