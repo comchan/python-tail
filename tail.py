@@ -9,6 +9,7 @@ class Tail:
         self._file_name = file_name
         self._line_handler = line_handler
         self._truncate_handler = truncate_handler
+        self._retry = False
         for kw in kwargs:
             if kw == 'retry':
                 self._retry = bool(kwargs[kw])
@@ -72,7 +73,7 @@ class Tail:
             print("Access denied: "+self._file_name)
             raise
         except:
-            print("Other error: "+sys.exc_info()[0])
+            print("Other error: "+str(sys.exc_info()[0]))
             raise
 
 
